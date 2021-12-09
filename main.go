@@ -18,6 +18,7 @@ import (
 )
 
 var key string = os.Getenv("jwtkey")
+var PORT string = os.Getenv("PORT")
 
 func main() {
 	//Set up database
@@ -34,69 +35,11 @@ func main() {
 
 	//Set up router and routes
 	r := chi.NewRouter()
+	r.Post("/login", loginHandler)
+	r.Post("/register", registerHandler)
 
-	r.Post("/login", func(w http.ResponseWriter, r *http.Request) {
-		log.Println("Login endpoint hit")
+	r.Mount("/", ProtectedRoutes())
 
-		var u models.User
-		err := json.NewDecoder(r.Body).Decode(&u)
-		if err != nil {
-			log.Println("Error while decoding: ", err)
-			http.Error(w, http.StatusText(400), 400)
-			return
-		}
-
-		id, err := login(u)
-		if err != nil {
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				log.Println("User not found")
-				http.Error(w, "Invalid username", 401)
-				return
-			}
-			log.Println("Wrong password")
-			http.Error(w, "Wrong password", 401)
-			return
-		}
-
-		//Make JWT
-		signedString, err := makeJwt(id)
-		if err != nil {
-			log.Println("Error making jwt:", err)
-			return
-		}
-		w.Write([]byte(signedString))
-
-	})
-
-	r.Post("/register", func(w http.ResponseWriter, r *http.Request) {
-		log.Println("Register endpoint hit")
-
-		var u models.User
-		err := json.NewDecoder(r.Body).Decode(&u)
-		if err != nil {
-			log.Println("Error while decoding: ", err)
-			http.Error(w, http.StatusText(400), 400)
-			return
-		}
-
-		err = register(u.Username, u.Password)
-		if err != nil {
-			if err.Error() == "UNIQUE constraint failed: users.username" { //username taken
-				http.Error(w, "Username taken", 400)
-			} else {
-				log.Println("Error: ", err)
-				http.Error(w, "Error", 400)
-			}
-			return
-		}
-		w.Write([]byte("Success"))
-	})
-
-	r.Route("/", func(r chi.Router) {
-		r.Get("/project", getProject)
-	})
-
-	PORT := os.Getenv("PORT")
 	if PORT == "" {
 		PORT = "8000"
 	}
@@ -104,7 +47,7 @@ func main() {
 	http.ListenAndServe(":"+PORT, r)
 }
 
-func makeJwt(id uint) (string, error) {
+func makeJwt(id int) (string, error) {
 	token := jwt.New(jwt.GetSigningMethod("HS256"))
 	token.Claims = &jwt.StandardClaims{
 		ExpiresAt: time.Now().Add(time.Hour * 24).Unix(),
@@ -113,11 +56,64 @@ func makeJwt(id uint) (string, error) {
 	return token.SignedString([]byte(key))
 }
 
-func getProject(w http.ResponseWriter, r *http.Request) {
+func registerHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println("Register endpoint hit")
+
+	var u models.User
+	err := json.NewDecoder(r.Body).Decode(&u)
+	if err != nil {
+		log.Println("Error while decoding: ", err)
+		http.Error(w, http.StatusText(400), 400)
+		return
+	}
+
+	err = register(u.Username, u.Password)
+	if err != nil {
+		if err.Error() == "UNIQUE constraint failed: users.username" { //username taken
+			http.Error(w, "Username taken", 400)
+		} else {
+			log.Println("Error: ", err)
+			http.Error(w, "Error", 400)
+		}
+		return
+	}
+	w.Write([]byte("Success"))
+}
+
+func loginHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println("Login endpoint hit")
+
+	var u models.User
+	err := json.NewDecoder(r.Body).Decode(&u)
+	if err != nil {
+		log.Println("Error while decoding: ", err)
+		http.Error(w, http.StatusText(400), 400)
+		return
+	}
+
+	id, err := login(u)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			log.Println("User not found")
+			http.Error(w, "Invalid username", 401)
+			return
+		}
+		log.Println("Wrong password")
+		http.Error(w, "Wrong password", 401)
+		return
+	}
+
+	//Make JWT
+	signedString, err := makeJwt(id)
+	if err != nil {
+		log.Println("Error making jwt:", err)
+		return
+	}
+	w.Write([]byte(signedString))
 
 }
 
-func login(u models.User) (uint, error) {
+func login(u models.User) (int, error) {
 	//Find user
 	var user models.User
 	result := db.DB.Where("username = ?", u.Username).First(&user)

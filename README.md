@@ -2,7 +2,7 @@
 Backend for my submission to CVWO's assignment.
 
 # Features
-- Account System
+- Account System powered by JWT
 - Projects with tasks
 - Multiple users per project
 - Tagging for tasks

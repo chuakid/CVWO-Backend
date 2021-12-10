@@ -26,3 +26,7 @@ func (task *Task) DeleteTask() error {
 	result := db.DB.Delete(&task)
 	return result.Error
 }
+func (task *Task) EditTask(description string) error {
+	result := db.DB.Model(&task).Update("description", description)
+	return result.Error
+}

@@ -68,7 +68,34 @@ func deleteTaskHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func editTaskHandler(w http.ResponseWriter, r *http.Request) {
+	task, err := extractTaskAndCheckAccess(r)
+	if err != nil {
+		log.Println(err)
+		if err.Error() == "not auth" {
+			http.Error(w, "Not authorised", 401)
+		} else {
+			http.Error(w, "Error editing task", 400)
+		}
+		return
+	}
 
+	descStruct := struct {
+		Description string `json:"description"`
+	}{}
+	err = json.NewDecoder(r.Body).Decode(&descStruct)
+	if err != nil {
+		log.Println("Error editing task", err)
+		http.Error(w, "Error editing task", 400)
+		return
+	}
+
+	err = task.EditTask(descStruct.Description)
+	if err != nil {
+		log.Println("Error editing task", err)
+		http.Error(w, "Error editing task", 400)
+		return
+	}
+	w.Write([]byte("Task edited"))
 }
 
 func extractTaskAndCheckAccess(r *http.Request) (*models.Task, error) {

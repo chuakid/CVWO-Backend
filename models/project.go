@@ -16,7 +16,9 @@ type Project struct {
 }
 
 func (project *Project) GetProject() error {
-	result := db.DB.Preload("Tasks").Preload("Users").First(&project)
+	result := db.DB.Preload("Tasks").Preload("Users", func(db *gorm.DB) *gorm.DB {
+		return db.Select("ID", "username")
+	}).First(&project)
 	return result.Error
 }
 

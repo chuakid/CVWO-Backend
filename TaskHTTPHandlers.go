@@ -4,8 +4,11 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/chuakid/cvwo-backend/models"
+	"github.com/go-chi/chi/v5"
+	"github.com/pkg/errors"
 )
 
 func createTaskHandler(w http.ResponseWriter, r *http.Request) {
@@ -40,4 +43,61 @@ func createTaskHandler(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(task)
 	}
 
+}
+
+func deleteTaskHandler(w http.ResponseWriter, r *http.Request) {
+	task, err := extractTaskAndCheckAccess(r)
+	if err != nil {
+		log.Println(err)
+		if err.Error() == "not auth" {
+			http.Error(w, "Not authorised", 401)
+		} else {
+			http.Error(w, "Error deleting task", 400)
+		}
+		return
+	}
+
+	err = task.DeleteTask()
+	if err != nil {
+		log.Println("Error deleting task", err)
+		http.Error(w, "Error deleting task", 400)
+		return
+	}
+	w.Write([]byte("Task deleted"))
+
+}
+
+func editTaskHandler(w http.ResponseWriter, r *http.Request) {
+
+}
+
+func extractTaskAndCheckAccess(r *http.Request) (*models.Task, error) {
+	userid := r.Context().Value("userid")
+	if userid, ok := userid.(string); ok { //Type assertion
+		taskId := chi.URLParam(r, "taskId")
+		taskIdInt, err := strconv.Atoi(taskId)
+		if err != nil {
+			return nil, err
+		}
+
+		task := models.Task{
+			ID: taskIdInt,
+		}
+		err = task.GetTask()
+		if err != nil {
+			return nil, err
+		}
+
+		project := models.Project{ID: task.ProjectID}
+		projectAccess, err := checkProjectAccess(project, userid)
+		if err != nil {
+			return nil, err
+		}
+		if !projectAccess {
+			return nil, errors.New("not auth")
+		}
+		return &task, nil
+	} else {
+		return nil, errors.New("Error extracting taskid")
+	}
 }

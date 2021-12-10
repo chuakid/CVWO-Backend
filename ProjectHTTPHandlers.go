@@ -66,6 +66,15 @@ func createProjectHandler(w http.ResponseWriter, r *http.Request) {
 func getProjectHandler(w http.ResponseWriter, r *http.Request) {
 	log.Print("Get Project Endpoint Hit")
 	project, err := extractProjectIdAndCheckAccess(r)
+	if err != nil {
+		log.Println(err)
+		if err.Error() == "not auth" {
+			http.Error(w, "Not authorised", 401)
+		} else {
+			http.Error(w, "Error deleting project", 400)
+		}
+		return
+	}
 	err = project.GetProject()
 	if err != nil {
 		log.Println("Error getting project:", err)

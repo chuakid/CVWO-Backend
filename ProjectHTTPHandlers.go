@@ -117,13 +117,13 @@ func renameProjectHandler(w http.ResponseWriter, r *http.Request) {
 	}{}
 	err = json.NewDecoder(r.Body).Decode(&namestruct)
 	if err != nil {
-		log.Println("Error deleting project:", err)
-		http.Error(w, "Error deleting project", 400)
+		log.Println("Error renaming project:", err)
+		http.Error(w, "Error renaming project", 400)
 	}
 	err = project.RenameProject(namestruct.Name)
 	if err != nil {
-		log.Println("Error deleting project:", err)
-		http.Error(w, "Error deleting project", 400)
+		log.Println("Error renaming project:", err)
+		http.Error(w, "Error renaming project", 400)
 	}
 	w.Write([]byte("Rename success"))
 
@@ -137,7 +137,7 @@ func addProjectUserHandler(w http.ResponseWriter, r *http.Request) {
 		if err.Error() == "not auth" {
 			http.Error(w, "Not authorised", 401)
 		} else {
-			http.Error(w, "Error deleting project", 400)
+			http.Error(w, "Error adding user to project", 400)
 		}
 		return
 	}

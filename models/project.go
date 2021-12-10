@@ -51,3 +51,8 @@ func (project *Project) RenameProject(name string) error {
 	result := db.DB.Model(&project).Update("name", name)
 	return result.Error
 }
+
+func (project *Project) AddUser(user *User) error {
+	err := db.DB.Model(&project).Association("Users").Append(user)
+	return err
+}

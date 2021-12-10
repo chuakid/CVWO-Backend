@@ -9,6 +9,7 @@ import (
 
 	"github.com/chuakid/cvwo-backend/models"
 	"github.com/go-chi/chi/v5"
+	"github.com/pkg/errors"
 )
 
 func getProjectsHandler(w http.ResponseWriter, r *http.Request) {
@@ -64,120 +65,121 @@ func createProjectHandler(w http.ResponseWriter, r *http.Request) {
 
 func getProjectHandler(w http.ResponseWriter, r *http.Request) {
 	log.Print("Get Project Endpoint Hit")
-	userid := r.Context().Value("userid")
-	if userid, ok := userid.(string); ok { //Type assertion
-		projectid := chi.URLParam(r, "projectId")
-		projectidInt, err := strconv.Atoi(projectid)
-		if err != nil {
-			log.Println("Error getting project:", err)
-			http.Error(w, "Error getting project", 400)
-			return
-		}
-		project := models.Project{ID: projectidInt}
-		//check if user is allowed to access project
-		projectAccess, err := checkProjectAccess(project, userid)
-		if err != nil {
-			log.Println("Error getting project:", err)
-			http.Error(w, "Error getting project", 400)
-			return
-		}
-		if !projectAccess {
-			http.Error(w, "Not authorized to access project", 401)
-			return
-		}
-		err = project.GetProject()
-		if err != nil {
-			log.Println("Error getting project:", err)
-			http.Error(w, "Error getting project", 400)
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(project)
-	} else {
+	project, err := extractProjectIdAndCheckAccess(r)
+	err = project.GetProject()
+	if err != nil {
+		log.Println("Error getting project:", err)
+		http.Error(w, "Error getting project", 400)
 		return
 	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(project)
+
 }
 
 func deleteProjectHandler(w http.ResponseWriter, r *http.Request) {
 	log.Print("Delete Project Endpoint Hit")
-	userid := r.Context().Value("userid")
-	if userid, ok := userid.(string); ok { //Type assertion
-		projectid := chi.URLParam(r, "projectId")
-		projectidInt, err := strconv.Atoi(projectid)
-		if err != nil {
-			log.Println("Error getting project:", err)
-			http.Error(w, "Error getting project", 400)
-			return
-		}
-		project := models.Project{ID: projectidInt}
-		//check if user is allowed to access project
-		projectAccess, err := checkProjectAccess(project, userid)
-		if err != nil {
-			log.Println("Error getting project:", err)
-			http.Error(w, "Error getting project", 400)
-			return
-		}
-		if !projectAccess {
-			http.Error(w, "Not authorized to access project", 401)
-			return
-		}
-		err = project.DeleteProject()
-		if err != nil {
-			log.Println("Error deleting project:", err)
+	project, err := extractProjectIdAndCheckAccess(r)
+	if err != nil {
+		log.Println(err)
+		if err.Error() == "not auth" {
+			http.Error(w, "Not authorised", 401)
+		} else {
 			http.Error(w, "Error deleting project", 400)
-			return
 		}
-		w.Write([]byte("Deletion success"))
-	} else {
 		return
 	}
+	err = project.DeleteProject()
+	if err != nil {
+		log.Println("Error deleting project:", err)
+		http.Error(w, "Error deleting project", 400)
+		return
+	}
+	w.Write([]byte("Deletion success"))
+
 }
 
 func renameProjectHandler(w http.ResponseWriter, r *http.Request) {
-	log.Print("Update Project Endpoint Hit")
+	log.Print("Rename Project Endpoint Hit")
+	project, err := extractProjectIdAndCheckAccess(r)
+	if err != nil {
+		log.Println(err)
+		if err.Error() == "not auth" {
+			http.Error(w, "Not authorised", 401)
+		} else {
+			http.Error(w, "Error renaming project", 400)
+		}
+		return
+	}
+	namestruct := struct {
+		Name string `json:"name"`
+	}{}
+	err = json.NewDecoder(r.Body).Decode(&namestruct)
+	if err != nil {
+		log.Println("Error deleting project:", err)
+		http.Error(w, "Error deleting project", 400)
+	}
+	err = project.RenameProject(namestruct.Name)
+	if err != nil {
+		log.Println("Error deleting project:", err)
+		http.Error(w, "Error deleting project", 400)
+	}
+	w.Write([]byte("Rename success"))
+
+}
+
+func addProjectUserHandler(w http.ResponseWriter, r *http.Request) {
+	log.Print("Add Project User Endpoint Hit")
+	project, err := extractProjectIdAndCheckAccess(r)
+	if err != nil {
+		log.Println(err)
+		if err.Error() == "not auth" {
+			http.Error(w, "Not authorised", 401)
+		} else {
+			http.Error(w, "Error deleting project", 400)
+		}
+		return
+	}
+
+	//Check if user exists
+	userid := chi.URLParam(r, "userId")
+	useridint, err := strconv.Atoi(userid)
+	user := models.User{ID: useridint}
+	if !user.UserExists() {
+		log.Println("User does not exist")
+		http.Error(w, "User does not exist", 400)
+		return
+	}
+
+	err = project.AddUser(&user)
+	if err != nil {
+		log.Println("Error adding user to project:", err)
+		http.Error(w, "Error adding user to project", 400)
+	}
+	w.Write([]byte("User added"))
+}
+
+func extractProjectIdAndCheckAccess(r *http.Request) (*models.Project, error) {
 	userid := r.Context().Value("userid")
 	if userid, ok := userid.(string); ok { //Type assertion
 		projectid := chi.URLParam(r, "projectId")
 		projectidInt, err := strconv.Atoi(projectid)
 		if err != nil {
-			log.Println("Error renaming project:", err)
-			http.Error(w, "Error renaming project", 400)
-			return
+			return nil, err
 		}
 		project := models.Project{ID: projectidInt}
-		//check if user is allowed to access project
 		projectAccess, err := checkProjectAccess(project, userid)
 		if err != nil {
-			log.Println("Error renaming project:", err)
-			http.Error(w, "Error renaming project", 400)
-			return
+			return nil, err
 		}
 		if !projectAccess {
-			http.Error(w, "Not authorized to access project", 401)
-			return
+			return nil, errors.New("not auth")
 		}
-
-		namestruct := struct {
-			Name string `json:"name"`
-		}{}
-		err = json.NewDecoder(r.Body).Decode(&namestruct)
-		if err != nil {
-			log.Println("Error deleting project:", err)
-			http.Error(w, "Error deleting project", 400)
-		}
-		err = project.RenameProject(namestruct.Name)
-		if err != nil {
-			log.Println("Error deleting project:", err)
-			http.Error(w, "Error deleting project", 400)
-		}
-		w.Write([]byte("Rename success"))
+		return &project, nil
 	} else {
-		return
+		return nil, errors.New("Error extracting userid")
 	}
-}
-
-func addProjectUserHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 

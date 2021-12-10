@@ -1,6 +1,8 @@
 package models
 
 import (
+	"errors"
+
 	"github.com/chuakid/cvwo-backend/db"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -12,6 +14,11 @@ type User struct {
 	Username string     `json:"username" gorm:"unique"`
 	Password string     `json:"password"`
 	Projects []*Project `gorm:"many2many:UserProjects;"`
+}
+
+func (user *User) UserExists() bool {
+	err := db.DB.First(&user).Error
+	return !errors.Is(err, gorm.ErrRecordNotFound)
 }
 
 func (user *User) GetProjects() ([]Project, error) {

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -76,6 +77,7 @@ func uploadProject(w http.ResponseWriter, r *http.Request) {
 		}
 		w.Header().Set("Cotent-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]string{
+			"id":   fmt.Sprint(project.ID),
 			"name": project.Name,
 		})
 

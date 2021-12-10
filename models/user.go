@@ -8,10 +8,16 @@ import (
 
 type User struct {
 	gorm.Model
-	ID       int
+	ID       int        `json:"ID"`
 	Username string     `json:"username" gorm:"unique"`
 	Password string     `json:"password"`
 	Projects []*Project `gorm:"many2many:UserProjects;"`
+}
+
+func (user *User) GetProjects() ([]Project, error) {
+	var projects []Project
+	err := db.DB.Model(&user).Association("Projects").Find(&projects)
+	return projects, err
 }
 
 func (user *User) CreateUser() (int, error) {

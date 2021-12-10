@@ -28,6 +28,7 @@ func main() {
 	}
 	db.DB.AutoMigrate(&models.User{})
 	db.DB.AutoMigrate(&models.Project{})
+	db.DB.AutoMigrate(&models.Task{})
 
 	//Set up logger
 	file, err := os.OpenFile("logs.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)

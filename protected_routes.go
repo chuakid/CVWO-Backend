@@ -19,21 +19,14 @@ func ProtectedRoutes() *chi.Mux {
 	protectedR := chi.NewRouter()
 	protectedR.Use(loggedInOnly)
 	protectedR.Route("/project", func(r chi.Router) {
-		r.Get("/{id}", getProject)
+		r.Get("/{projectId}", getProjectHandler)
 		r.Post("/", uploadProject)
 	})
 	protectedR.Get("/projects", getProjects)
-
+	protectedR.Route("/task", func(r chi.Router) {
+		r.Post("/", createTaskHandler)
+	})
 	return protectedR
-}
-
-func getProject(w http.ResponseWriter, r *http.Request) {
-	userid := r.Context().Value("userid")
-	if userid, ok := userid.(string); ok { //Type assertion
-		w.Write([]byte(userid))
-	} else {
-		return
-	}
 }
 
 func getProjects(w http.ResponseWriter, r *http.Request) {
@@ -85,6 +78,61 @@ func uploadProject(w http.ResponseWriter, r *http.Request) {
 		log.Print("Error uploaded project:")
 		return
 	}
+}
+
+func getProjectHandler(w http.ResponseWriter, r *http.Request) {
+	log.Print("Get Tasks Endpoint Hit")
+	userid := r.Context().Value("userid")
+	if userid, ok := userid.(string); ok { //Type assertion
+		projectid := chi.URLParam(r, "projectId")
+		projectidInt, err := strconv.Atoi(projectid)
+		if err != nil {
+			log.Println("Error getting project:", err)
+			http.Error(w, "Error getting project", 400)
+			return
+		}
+		project := models.Project{ID: projectidInt}
+		//check if user is allowed to access project
+		projectAccess, err := checkProjectAccess(project, userid)
+		if err != nil {
+			log.Println("Error getting project:", err)
+			http.Error(w, "Error getting project", 400)
+			return
+		}
+		if !projectAccess {
+			http.Error(w, "Not authorized to access project", 401)
+			return
+		}
+		err = project.GetProject()
+		if err != nil {
+			log.Println("Error getting project:", err)
+			http.Error(w, "Error getting project", 400)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(project)
+	} else {
+		return
+	}
+}
+
+func checkProjectAccess(project models.Project, userid string) (bool, error) {
+	projectUsers, err := project.GetUsers()
+	if err != nil {
+		return false, err
+	}
+	for _, user := range projectUsers {
+		if fmt.Sprint(user.ID) == userid {
+			return true, nil
+		}
+	}
+	log.Println("Not authorized to access project")
+	return false, nil
+
+}
+
+func createTaskHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func loggedInOnly(next http.Handler) http.Handler {

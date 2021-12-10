@@ -10,15 +10,16 @@ import (
 
 type Project struct {
 	gorm.Model
-	ID    int
+	ID    int     `json:"ID"`
 	Name  string  `json:"name"`
 	Users []*User `gorm:"many2many:UserProjects"`
+	Tasks []*Task
 }
 
-func (user *User) GetProjects() ([]Project, error) {
-	var projects []Project
-	err := db.DB.Model(&user).Association("Projects").Find(&projects)
-	return projects, err
+func (project *Project) GetProject() error {
+	result := db.DB.Preload("Tasks").First(&project)
+
+	return result.Error
 }
 
 func (project *Project) CreateProject(userid string) (int, error) {
@@ -37,4 +38,10 @@ func (project *Project) CreateProject(userid string) (int, error) {
 	}
 
 	return project.ID, nil
+}
+
+func (project *Project) GetUsers() ([]User, error) {
+	var users []User
+	err := db.DB.Model(&project).Association("Users").Find(&users)
+	return users, err
 }

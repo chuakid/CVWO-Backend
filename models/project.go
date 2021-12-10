@@ -37,6 +37,10 @@ func (project *Project) CreateProject(userid string) error {
 	return nil
 }
 
+func (project *Project) DeleteProject() error {
+	return db.DB.Delete(&project).Error
+}
+
 func (project *Project) GetUsers() ([]User, error) {
 	var users []User
 	err := db.DB.Model(&project).Association("Users").Find(&users)

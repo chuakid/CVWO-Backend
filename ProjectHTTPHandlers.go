@@ -63,7 +63,7 @@ func createProjectHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func getProjectHandler(w http.ResponseWriter, r *http.Request) {
-	log.Print("Get Tasks Endpoint Hit")
+	log.Print("Get Project Endpoint Hit")
 	userid := r.Context().Value("userid")
 	if userid, ok := userid.(string); ok { //Type assertion
 		projectid := chi.URLParam(r, "projectId")
@@ -97,6 +97,42 @@ func getProjectHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		return
 	}
+}
+
+func deleteProjectHandler(w http.ResponseWriter, r *http.Request) {
+	log.Print("Delete Project Endpoint Hit")
+	userid := r.Context().Value("userid")
+	if userid, ok := userid.(string); ok { //Type assertion
+		projectid := chi.URLParam(r, "projectId")
+		projectidInt, err := strconv.Atoi(projectid)
+		if err != nil {
+			log.Println("Error getting project:", err)
+			http.Error(w, "Error getting project", 400)
+			return
+		}
+		project := models.Project{ID: projectidInt}
+		//check if user is allowed to access project
+		projectAccess, err := checkProjectAccess(project, userid)
+		if err != nil {
+			log.Println("Error getting project:", err)
+			http.Error(w, "Error getting project", 400)
+			return
+		}
+		if !projectAccess {
+			http.Error(w, "Not authorized to access project", 401)
+			return
+		}
+		err = project.DeleteProject()
+		if err != nil {
+			log.Println("Error deleting project:", err)
+			http.Error(w, "Error deleting project", 400)
+			return
+		}
+		w.Write([]byte("Deletion success"))
+	} else {
+		return
+	}
+
 }
 
 func checkProjectAccess(project models.Project, userid string) (bool, error) {

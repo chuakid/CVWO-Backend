@@ -46,3 +46,8 @@ func (project *Project) GetUsers() ([]User, error) {
 	err := db.DB.Model(&project).Association("Users").Find(&users)
 	return users, err
 }
+
+func (project *Project) RenameProject(name string) error {
+	result := db.DB.Model(&project).Update("name", name)
+	return result.Error
+}

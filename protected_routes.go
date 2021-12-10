@@ -18,6 +18,8 @@ func ProtectedRoutes() *chi.Mux {
 		r.Get("/{projectId}", getProjectHandler)
 		r.Delete("/{projectId}", deleteProjectHandler)
 		r.Post("/", createProjectHandler)
+		r.Post("/{projectId}", renameProjectHandler)
+		// r.Post("/project/user/userid", addProjectUserHandler)
 	})
 	protectedR.Get("/projects", getProjectsHandler)
 	protectedR.Route("/task", func(r chi.Router) {

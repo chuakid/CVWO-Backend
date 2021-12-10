@@ -132,6 +132,52 @@ func deleteProjectHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		return
 	}
+}
+
+func renameProjectHandler(w http.ResponseWriter, r *http.Request) {
+	log.Print("Update Project Endpoint Hit")
+	userid := r.Context().Value("userid")
+	if userid, ok := userid.(string); ok { //Type assertion
+		projectid := chi.URLParam(r, "projectId")
+		projectidInt, err := strconv.Atoi(projectid)
+		if err != nil {
+			log.Println("Error renaming project:", err)
+			http.Error(w, "Error renaming project", 400)
+			return
+		}
+		project := models.Project{ID: projectidInt}
+		//check if user is allowed to access project
+		projectAccess, err := checkProjectAccess(project, userid)
+		if err != nil {
+			log.Println("Error renaming project:", err)
+			http.Error(w, "Error renaming project", 400)
+			return
+		}
+		if !projectAccess {
+			http.Error(w, "Not authorized to access project", 401)
+			return
+		}
+
+		namestruct := struct {
+			Name string `json:"name"`
+		}{}
+		err = json.NewDecoder(r.Body).Decode(&namestruct)
+		if err != nil {
+			log.Println("Error deleting project:", err)
+			http.Error(w, "Error deleting project", 400)
+		}
+		err = project.RenameProject(namestruct.Name)
+		if err != nil {
+			log.Println("Error deleting project:", err)
+			http.Error(w, "Error deleting project", 400)
+		}
+		w.Write([]byte("Rename success"))
+	} else {
+		return
+	}
+}
+
+func addProjectUserHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 

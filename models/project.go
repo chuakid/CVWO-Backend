@@ -1,7 +1,6 @@
 package models
 
 import (
-	"log"
 	"strconv"
 
 	"github.com/chuakid/cvwo-backend/db"
@@ -17,16 +16,14 @@ type Project struct {
 }
 
 func (project *Project) GetProject() error {
-	result := db.DB.Preload("Tasks").First(&project)
-
+	result := db.DB.Preload("Tasks").Preload("Users").First(&project)
 	return result.Error
 }
 
-func (project *Project) CreateProject(userid string) (int, error) {
+func (project *Project) CreateProject(userid string) error {
 	id, err := strconv.Atoi(userid)
 	if err != nil {
-		log.Print("Error creating project:", err)
-		return 0, err
+		return err
 	}
 	user := User{
 		ID: id,
@@ -34,10 +31,10 @@ func (project *Project) CreateProject(userid string) (int, error) {
 	project.Users = append(project.Users, &user)
 	result := db.DB.Create(&project)
 	if result.Error != nil {
-		return 0, result.Error
+		return result.Error
 	}
 
-	return project.ID, nil
+	return nil
 }
 
 func (project *Project) GetUsers() ([]User, error) {

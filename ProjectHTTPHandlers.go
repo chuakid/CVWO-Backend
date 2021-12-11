@@ -71,7 +71,7 @@ func getProjectHandler(w http.ResponseWriter, r *http.Request) {
 		if err.Error() == "not auth" {
 			http.Error(w, "Not authorised", 401)
 		} else {
-			http.Error(w, "Error deleting project", 400)
+			http.Error(w, "Error getting project", 400)
 		}
 		return
 	}

@@ -26,6 +26,10 @@ func main() {
 	if err != nil {
 		log.Fatalln("could not create database", err)
 	}
+	err = db.DB.SetupJoinTable(&models.User{}, "Projects", &models.UserProjects{})
+	if err != nil {
+		log.Fatalln("could not create database", err)
+	}
 	db.DB.AutoMigrate(&models.User{})
 	db.DB.AutoMigrate(&models.Project{})
 	db.DB.AutoMigrate(&models.Task{})

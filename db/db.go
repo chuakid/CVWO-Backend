@@ -1,14 +1,17 @@
 package db
 
 import (
-	"gorm.io/driver/sqlite"
+	"os"
+
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
 var DB *gorm.DB
 
 func InitDatabase() (err error) {
-	DB, err = gorm.Open(sqlite.Open("cvwo.db"), &gorm.Config{})
+	var DATABASE_URL string = os.Getenv("DATABASE_URL")
+	DB, err = gorm.Open(postgres.Open(DATABASE_URL), &gorm.Config{})
 	if err != nil {
 		return
 	}

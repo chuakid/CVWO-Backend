@@ -8,8 +8,7 @@ Backend for my submission to CVWO's assignment.
 - Tagging for tasks
 
 # TODO
-- Track projects (with CRUD)
-- Track tasks (with CRUD)
-- Tagging for tasks
-- Search for projects and tasks
-- Add users to projects
+- Track projects (with CRUD) *Done*
+- Track tasks (with CRUD) *Done*
+- Tagging for tasks and projects
+- Add users to projects *Done*

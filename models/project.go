@@ -9,17 +9,41 @@ import (
 
 type Project struct {
 	gorm.Model
-	ID    int     `json:"ID"`
+	ID    int     `json:"id"`
 	Name  string  `json:"name"`
 	Users []*User `gorm:"many2many:UserProjects"`
 	Tasks []*Task
 }
 
-func (project *Project) GetProject() error {
-	result := db.DB.Preload("Tasks").Preload("Users", func(db *gorm.DB) *gorm.DB {
-		return db.Select("ID", "username")
-	}).First(&project)
-	return result.Error
+type APIProjectSummary struct {
+	ID   int    `json:"id"`
+	Name string `json:"name"`
+}
+
+type APIProjectDetailed struct {
+	ID    int        `json:"id"`
+	Name  string     `json:"name"`
+	Users []*APIUser `gorm:"many2many:UserProjects"`
+	Tasks []*APITask
+}
+
+func (project *Project) GetProjectDetails() (*APIProjectDetailed, error) {
+	var apiproject APIProjectDetailed
+	result := db.DB.Model(&project).First(&apiproject, project.ID)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	//Manually do preloading, GORM doesn't work well with smart select + preloads
+	err := db.DB.Model(&project).Association("Users").Find(&apiproject.Users)
+	if err != nil {
+		return nil, err
+	}
+	err = db.DB.Model(&project).Association("Tasks").Find(&apiproject.Tasks)
+	if err != nil {
+		return nil, err
+	}
+
+	return &apiproject, result.Error
 }
 
 func (project *Project) CreateProject(userid string) error {

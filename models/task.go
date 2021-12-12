@@ -13,6 +13,12 @@ type Task struct {
 	ProjectID   int      `json:"projectid"`
 }
 
+type APITask struct {
+	ID          int      `json:"ID"`
+	Description string   `json:"description"`
+	Project     *Project `json:"-"`
+}
+
 func (task *Task) CreateTask() error {
 	result := db.DB.Create(task)
 	return result.Error

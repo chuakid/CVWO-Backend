@@ -75,7 +75,7 @@ func getProjectHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	err = project.GetProject()
+	apiproject, err := project.GetProjectDetails()
 	if err != nil {
 		log.Println("Error getting project:", err)
 		http.Error(w, "Error getting project", 400)
@@ -83,7 +83,7 @@ func getProjectHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(project)
+	json.NewEncoder(w).Encode(apiproject)
 
 }
 
@@ -152,9 +152,8 @@ func addProjectUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//Check if user exists
-	userid := chi.URLParam(r, "userId")
-	useridint, err := strconv.Atoi(userid)
-	user := models.User{ID: useridint}
+	username := chi.URLParam(r, "username")
+	user := models.User{Username: username}
 	if !user.UserExists() {
 		log.Println("User does not exist")
 		http.Error(w, "User does not exist", 400)

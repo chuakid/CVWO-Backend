@@ -16,13 +16,19 @@ type User struct {
 	Projects []*Project `gorm:"many2many:UserProjects;"`
 }
 
+type APIUser struct {
+	ID       int
+	Username string     `json:"username"`
+	Projects []*Project `gorm:"many2many:UserProjects;"`
+}
+
 func (user *User) UserExists() bool {
-	err := db.DB.First(&user).Error
+	err := db.DB.Where("username = ?", user.Username).First(&user).Error
 	return !errors.Is(err, gorm.ErrRecordNotFound)
 }
 
-func (user *User) GetProjects() ([]Project, error) {
-	var projects []Project
+func (user *User) GetProjects() ([]APIProjectSummary, error) {
+	var projects []APIProjectSummary
 	err := db.DB.Model(&user).Association("Projects").Find(&projects)
 	return projects, err
 }

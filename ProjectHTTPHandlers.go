@@ -52,8 +52,8 @@ func createProjectHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]string{
-			"id":   fmt.Sprint(project.ID),
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"id":   project.ID,
 			"name": project.Name,
 		})
 

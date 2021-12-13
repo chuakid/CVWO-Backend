@@ -29,10 +29,16 @@ type APIProjectDetailed struct {
 
 func (project *Project) GetProjectDetails() (*APIProjectDetailed, error) {
 	var apiproject APIProjectDetailed
-	result := db.DB.Model(&project).First(&apiproject, project.ID)
+	var summary APIProjectSummary
+	result := db.DB.Model(&project).First(&summary, project.ID)
+
 	if result.Error != nil {
 		return nil, result.Error
 	}
+	//Do this or GORM will throw errors about relations due to custom structs
+	apiproject.ID = summary.ID
+	apiproject.Name = summary.Name
+
 	//Manually do preloading, GORM doesn't work well with smart select + preloads
 	err := db.DB.Model(&project).Association("Users").Find(&apiproject.Users)
 	if err != nil {
@@ -58,6 +64,16 @@ func (project *Project) CreateProject(userid string) error {
 	result := db.DB.Create(&project)
 	if result.Error != nil {
 		return result.Error
+	}
+
+	//set role
+	userproject := UserProject{
+		UserID:    id,
+		ProjectID: project.ID,
+	}
+	err = userproject.ChangeRole(1)
+	if err != nil {
+		return err
 	}
 
 	return nil

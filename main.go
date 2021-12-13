@@ -26,7 +26,7 @@ func main() {
 	if err != nil {
 		log.Fatalln("could not create database", err)
 	}
-	err = db.DB.SetupJoinTable(&models.User{}, "Projects", &models.UserProjects{})
+	err = db.DB.SetupJoinTable(&models.User{}, "Projects", &models.UserProject{})
 	if err != nil {
 		log.Fatalln("could not create database", err)
 	}

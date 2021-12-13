@@ -4,15 +4,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"time"
 
-	"log"
-
 	"github.com/chuakid/cvwo-backend/db"
 	"github.com/chuakid/cvwo-backend/models"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/cors"
 	"github.com/golang-jwt/jwt"
 	"gorm.io/gorm"
 )
@@ -39,7 +39,15 @@ func main() {
 	log.SetOutput(file)
 
 	//Set up router and routes
+
 	r := chi.NewRouter()
+	//cors
+	r.Use(cors.Handler(cors.Options{
+		AllowedOrigins: []string{"https://*", "http://*"},
+		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders: []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+	}))
+
 	r.Post("/login", loginHandler)
 	r.Post("/register", registerHandler)
 

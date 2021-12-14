@@ -98,6 +98,40 @@ func editTaskHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Task edited"))
 }
 
+func setTaskCompletionHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println("Set task completion handler hit")
+	task, err := extractTaskAndCheckAccess(r)
+	if err != nil {
+		log.Println(err)
+		if err.Error() == "not auth" {
+			http.Error(w, "Not authorised", 401)
+		} else {
+			http.Error(w, "Error editing task", 400)
+		}
+		return
+	}
+	completedStruct := struct {
+		Completed bool `json:"completed"`
+	}{}
+	err = json.NewDecoder(r.Body).Decode(&completedStruct)
+	if err != nil {
+		log.Println("Error editing task", err)
+		http.Error(w, "Error editing task", 400)
+		return
+	}
+
+	task.Completed = completedStruct.Completed
+
+	err = task.SetTaskCompletion()
+
+	if err != nil {
+		log.Println("Error editing task", err)
+		http.Error(w, "Error editing task", 400)
+		return
+	}
+	w.Write([]byte("Task edited"))
+}
+
 func getTasksHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("Get tasks endpoint hit")
 	userid := r.Context().Value("userid")

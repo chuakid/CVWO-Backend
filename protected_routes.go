@@ -26,6 +26,7 @@ func ProtectedRoutes() *chi.Mux {
 	protectedR.Route("/task", func(r chi.Router) {
 		r.Post("/", createTaskHandler)
 		r.Delete("/{taskId}", deleteTaskHandler)
+		r.Patch("/{taskId}/check", setTaskCompletionHandler)
 		r.Post("/{taskId}", editTaskHandler)
 	})
 	return protectedR

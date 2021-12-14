@@ -14,10 +14,9 @@ type Task struct {
 }
 
 type APITask struct {
-	ID          int      `json:"ID"`
-	Description string   `json:"description"`
-	Project     *Project `json:"-"`
-	ProjectID   int      `json:"-"`
+	ID          int    `json:"ID"`
+	Description string `json:"description"`
+	ProjectID   int    `json:"projectid"`
 }
 
 func (task *Task) CreateTask() error {

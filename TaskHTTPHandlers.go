@@ -98,6 +98,29 @@ func editTaskHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Task edited"))
 }
 
+func getTasksHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println("Get tasks endpoint hit")
+	userid := r.Context().Value("userid")
+	if userid, ok := userid.(string); ok { //Type assertion
+		useridInt, err := strconv.Atoi(userid)
+		if err != nil {
+			log.Println("Error getting tasks:", err)
+			http.Error(w, "Error getting tasks", 400)
+			return
+		}
+		user := models.User{ID: useridInt}
+		tasks, err := user.GetTasks()
+		if err != nil {
+			log.Println("Error getting tasks:", err)
+			http.Error(w, "Error getting tasks", 400)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(tasks)
+	}
+
+}
+
 func extractTaskAndCheckAccess(r *http.Request) (*models.Task, error) {
 	userid := r.Context().Value("userid")
 	if userid, ok := userid.(string); ok { //Type assertion

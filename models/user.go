@@ -33,6 +33,25 @@ func (user *User) GetProjects() ([]APIProjectSummary, error) {
 	return projects, err
 }
 
+func (user *User) GetTasks() ([]APITask, error) {
+	var tasks []APITask
+	//Select tasks that are in projects that contain the user
+	rows, err := db.DB.Raw(`
+	SELECT id, description, project_id FROM Tasks WHERE project_id in 
+		(SELECT projects.id FROM projects 
+			JOIN user_projects ON user_projects.project_id = projects.id 
+			JOIN users ON users.id = user_projects.user_id 
+			WHERE user_id = ?)`, user.ID).Rows()
+
+	for rows.Next() {
+		task := APITask{}
+		db.DB.ScanRows(rows, &task)
+		tasks = append(tasks, task)
+	}
+
+	return tasks, err
+}
+
 func (user *User) CreateUser() (int, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(user.Password), 14)
 	if err != nil {

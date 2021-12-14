@@ -9,7 +9,7 @@ import (
 
 type Task struct {
 	gorm.Model  `json:"-"`
-	ID          int      `json:"ID"`
+	ID          int      `json:"id"`
 	Description string   `json:"description"`
 	Project     *Project `json:"-"`
 	ProjectID   int      `json:"projectid"`

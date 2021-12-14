@@ -17,9 +17,8 @@ type User struct {
 }
 
 type APIUser struct {
-	ID       int
 	Username string     `json:"username"`
-	Projects []*Project `gorm:"many2many:UserProjects;"`
+	Projects []*Project `json:"-" gorm:"many2many:UserProjects;"`
 }
 
 func (user *User) UserExists() bool {

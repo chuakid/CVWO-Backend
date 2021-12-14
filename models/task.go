@@ -11,6 +11,7 @@ type Task struct {
 	Description string   `json:"description"`
 	Project     *Project `json:"-"`
 	ProjectID   int      `json:"projectid"`
+	Completed   bool     `json:"completed" gorm:"default:false"`
 }
 
 func (task *Task) CreateTask() error {

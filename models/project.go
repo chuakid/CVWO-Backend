@@ -24,7 +24,7 @@ type APIProjectDetailed struct {
 	ID    int        `json:"id"`
 	Name  string     `json:"name"`
 	Users []*APIUser `gorm:"many2many:UserProjects"`
-	Tasks []*APITask
+	Tasks []*Task
 }
 
 func (project *Project) GetProjectDetails() (*APIProjectDetailed, error) {

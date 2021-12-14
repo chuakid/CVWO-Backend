@@ -32,8 +32,8 @@ func (user *User) GetProjects() ([]APIProjectSummary, error) {
 	return projects, err
 }
 
-func (user *User) GetTasks() ([]APITask, error) {
-	var tasks []APITask
+func (user *User) GetTasks() ([]Task, error) {
+	var tasks []Task
 	//Select tasks that are in projects that contain the user
 	rows, err := db.DB.Raw(`
 	SELECT id, description, project_id FROM Tasks WHERE project_id in 
@@ -43,7 +43,7 @@ func (user *User) GetTasks() ([]APITask, error) {
 			WHERE user_id = ?)`, user.ID).Rows()
 
 	for rows.Next() {
-		task := APITask{}
+		task := Task{}
 		db.DB.ScanRows(rows, &task)
 		tasks = append(tasks, task)
 	}

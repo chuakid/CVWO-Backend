@@ -6,17 +6,11 @@ import (
 )
 
 type Task struct {
-	gorm.Model
+	gorm.Model  `json:"-"`
 	ID          int      `json:"ID"`
 	Description string   `json:"description"`
-	Project     *Project `json:"project"`
+	Project     *Project `json:"-"`
 	ProjectID   int      `json:"projectid"`
-}
-
-type APITask struct {
-	ID          int    `json:"ID"`
-	Description string `json:"description"`
-	ProjectID   int    `json:"-"`
 }
 
 func (task *Task) CreateTask() error {

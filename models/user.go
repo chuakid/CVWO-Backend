@@ -40,7 +40,7 @@ func (user *User) GetTasks() ([]Task, error) {
 		(SELECT projects.id FROM projects 
 			JOIN user_projects ON user_projects.project_id = projects.id 
 			JOIN users ON users.id = user_projects.user_id 
-			WHERE user_id = ?)`, user.ID).Rows()
+			WHERE user_id = ? AND tasks.deleted_at = null)`, user.ID).Rows()
 
 	for rows.Next() {
 		task := Task{}

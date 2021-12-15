@@ -80,7 +80,7 @@ func (project *Project) CreateProject(userid string) error {
 }
 
 func (project *Project) DeleteProject() error {
-	return db.DB.Delete(&project).Error
+	return db.DB.Select("Tasks").Delete(&project).Error
 }
 
 func (project *Project) GetUsers() ([]User, error) {

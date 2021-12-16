@@ -1,5 +1,6 @@
 # Overview
 Backend for my submission to CVWO's assignment.
+Currently deployed to https://cvwo.herokuapp.com/
 
 # Features
 - Account System powered by JWT

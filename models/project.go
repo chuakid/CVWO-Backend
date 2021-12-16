@@ -21,10 +21,10 @@ type APIProjectSummary struct {
 }
 
 type APIProjectDetailed struct {
-	ID    int        `json:"id"`
-	Name  string     `json:"name"`
-	Users []*APIUser `gorm:"many2many:UserProjects"`
-	Tasks []*Task
+	ID    int         `json:"id"`
+	Name  string      `json:"name"`
+	Users []*UserRole `json:"users"`
+	Tasks []*Task     `json:"tasks"`
 }
 
 func (project *Project) GetProjectDetails() (*APIProjectDetailed, error) {
@@ -40,10 +40,12 @@ func (project *Project) GetProjectDetails() (*APIProjectDetailed, error) {
 	apiproject.Name = summary.Name
 
 	//Manually do preloading, GORM doesn't work well with smart select + preloads
-	err := db.DB.Model(&project).Association("Users").Find(&apiproject.Users)
+	users, err := project.GetUsersWithRoles()
 	if err != nil {
 		return nil, err
 	}
+	apiproject.Users = users
+
 	err = db.DB.Model(&project).Association("Tasks").Find(&apiproject.Tasks)
 	if err != nil {
 		return nil, err
@@ -99,16 +101,16 @@ func (project *Project) AddUser(user *User) error {
 	return err
 }
 
-func (project *Project) GetUsersWithRoles() ([]UserRole, error) {
+func (project *Project) GetUsersWithRoles() ([]*UserRole, error) {
 	rows, err := db.DB.Raw(`SELECT users.username, user_projects.role 
 						FROM users
 						JOIN user_projects ON user_projects.user_id = users.id 
 						WHERE user_projects.project_id = ?`, project.ID).Rows()
-	var userroles []UserRole
+	var userroles []*UserRole
 	for rows.Next() {
 		userrole := UserRole{}
 		db.DB.ScanRows(rows, &userrole)
-		userroles = append(userroles, userrole)
+		userroles = append(userroles, &userrole)
 	}
 
 	return userroles, err

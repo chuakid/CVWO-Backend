@@ -1,6 +1,7 @@
 package models
 
 import (
+	"errors"
 	"strconv"
 
 	"github.com/chuakid/cvwo-backend/db"
@@ -97,8 +98,11 @@ func (project *Project) RenameProject(name string) error {
 }
 
 func (project *Project) AddUser(user *User) error {
-	err := db.DB.Model(&project).Association("Users").Append(user)
-	return err
+	result := db.DB.Model(&UserProject{}).Where("user_id = ?", user.ID).First(&UserProject{})
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return db.DB.Model(&project).Association("Users").Append(user)
+	}
+	return errors.New("User already added")
 }
 
 func (project *Project) GetUsersWithRoles() ([]*UserRole, error) {

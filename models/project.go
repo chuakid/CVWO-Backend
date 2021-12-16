@@ -98,7 +98,7 @@ func (project *Project) RenameProject(name string) error {
 }
 
 func (project *Project) AddUser(user *User) error {
-	result := db.DB.Model(&UserProject{}).Where("user_id = ?", user.ID).First(&UserProject{})
+	result := db.DB.Model(&UserProject{}).Where("user_id = ? AND project_id = ?", user.ID, project.ID).First(&UserProject{})
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return db.DB.Model(&project).Association("Users").Append(user)
 	}

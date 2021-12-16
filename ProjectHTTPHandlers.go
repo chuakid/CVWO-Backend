@@ -63,6 +63,29 @@ func createProjectHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func getProjectUsersHandler(w http.ResponseWriter, r *http.Request) {
+	log.Print("Get Project Users Endpoint Hit")
+	project, err := extractProjectIdAndCheckAccess(r)
+	if err != nil {
+		log.Println(err)
+		if err.Error() == "not auth" {
+			http.Error(w, "Not authorised", 401)
+		} else {
+			http.Error(w, "Error getting projectusers", 400)
+		}
+		return
+	}
+	userroles, err := project.GetUsersWithRoles()
+	if err != nil {
+		log.Println("Error getting projectusers:", err)
+		http.Error(w, "Error getting projectusers", 400)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(userroles)
+}
+
 func getProjectHandler(w http.ResponseWriter, r *http.Request) {
 	log.Print("Get Project Endpoint Hit")
 	project, err := extractProjectIdAndCheckAccess(r)

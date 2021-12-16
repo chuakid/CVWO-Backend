@@ -98,3 +98,18 @@ func (project *Project) AddUser(user *User) error {
 	err := db.DB.Model(&project).Association("Users").Append(user)
 	return err
 }
+
+func (project *Project) GetUsersWithRoles() ([]UserRole, error) {
+	rows, err := db.DB.Raw(`SELECT users.username, user_projects.role 
+						FROM users
+						JOIN user_projects ON user_projects.user_id = users.id 
+						WHERE user_projects.project_id = ?`, project.ID).Rows()
+	var userroles []UserRole
+	for rows.Next() {
+		userrole := UserRole{}
+		db.DB.ScanRows(rows, &userrole)
+		userroles = append(userroles, userrole)
+	}
+
+	return userroles, err
+}

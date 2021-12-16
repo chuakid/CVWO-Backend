@@ -8,6 +8,11 @@ type UserProject struct {
 	Role      int `json:"role" gorm:"default:2"`
 }
 
+type UserRole struct {
+	Username string `json:"username"`
+	Role     int    `json:"role"`
+}
+
 func (userproject UserProject) ChangeRole(role int) error {
 	result := db.DB.Model(&userproject).Update("role", role)
 	return result.Error

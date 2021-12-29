@@ -33,5 +33,5 @@ Currently deployed to https://cvwo.herokuapp.com/
 # TODO
 - Track projects (with CRUD) *Done*
 - Track tasks (with CRUD) *Done*
-- Tagging for tasks and projects
+- Tagging for tasks *Done*
 - Add users to projects *Done*

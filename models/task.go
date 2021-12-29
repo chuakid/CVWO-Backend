@@ -1,8 +1,6 @@
 package models
 
 import (
-	"log"
-
 	"github.com/chuakid/cvwo-backend/db"
 	"gorm.io/gorm"
 )
@@ -13,6 +11,7 @@ type Task struct {
 	Description string   `json:"description"`
 	Project     *Project `json:"-"`
 	ProjectID   int      `json:"projectid"`
+	Color       int      `json:"color" gorm:"default:1"`
 	Completed   bool     `json:"completed" gorm:"default:false"`
 }
 
@@ -25,6 +24,11 @@ func (task *Task) GetTask() error {
 	result := db.DB.First(&task)
 	return result.Error
 }
+
+func (task *Task) ChangeColor(color int) error {
+	result := db.DB.Model(&task).Update("color", color)
+	return result.Error
+}
 func (task *Task) DeleteTask() error {
 	result := db.DB.Delete(&task)
 	return result.Error
@@ -35,7 +39,6 @@ func (task *Task) EditTask(description string) error {
 }
 
 func (task *Task) SetTaskCompletion() error {
-	log.Print((task))
 	result := db.DB.Model(&Task{}).Where("id = ?", task.ID).Update("completed", task.Completed)
 	return result.Error
 }

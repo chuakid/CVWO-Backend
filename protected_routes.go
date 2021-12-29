@@ -30,6 +30,7 @@ func ProtectedRoutes() *chi.Mux {
 		r.Delete("/{taskId}", deleteTaskHandler)
 		r.Patch("/{taskId}/check", setTaskCompletionHandler)
 		r.Post("/{taskId}", editTaskHandler)
+		r.Post("/{taskId}/color", changeColorHandler)
 	})
 	return protectedR
 }

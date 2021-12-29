@@ -155,6 +155,38 @@ func getTasksHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func changeColorHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println("Change color endpoint hit")
+	task, err := extractTaskAndCheckAccess(r)
+	if err != nil {
+		log.Println(err)
+		if err.Error() == "not auth" {
+			http.Error(w, "Not authorised", 401)
+		} else {
+			http.Error(w, "Error changing color of task", 400)
+		}
+		return
+	}
+
+	colorStruct := struct {
+		Color int `json:"color"`
+	}{}
+	err = json.NewDecoder(r.Body).Decode(&colorStruct)
+	if err != nil {
+		log.Println("Error changing color of task", err)
+		http.Error(w, "Error changing color of task", 400)
+		return
+	}
+
+	err = task.ChangeColor(colorStruct.Color)
+	if err != nil {
+		log.Println("Error changing color of task", err)
+		http.Error(w, "Error changing color of task", 400)
+		return
+	}
+	w.Write([]byte("Color changed"))
+}
+
 func extractTaskAndCheckAccess(r *http.Request) (*models.Task, error) {
 	userid := r.Context().Value("userid")
 	if userid, ok := userid.(string); ok { //Type assertion

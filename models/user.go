@@ -36,7 +36,7 @@ func (user *User) GetTasks() ([]Task, error) {
 	var tasks []Task
 	//Select tasks that are in projects that contain the user
 	rows, err := db.DB.Raw(`
-	SELECT id, description, project_id, completed FROM Tasks WHERE project_id in 
+	SELECT * FROM Tasks WHERE project_id in 
 		(SELECT projects.id FROM projects 
 			JOIN user_projects ON user_projects.project_id = projects.id 
 			JOIN users ON users.id = user_projects.user_id 

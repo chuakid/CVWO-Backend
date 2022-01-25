@@ -2,6 +2,10 @@
 Backend for my submission to CVWO's assignment.
 Currently deployed to https://cvwo.herokuapp.com/
 
+Name: Kelvin Chua
+
+Matriculation Number: A0235179X
+
 # Features
 - Account System powered by JWT
 - Projects with tasks
